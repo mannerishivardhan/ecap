@@ -1,0 +1,26 @@
+# Flutter & Dart
+build/
+.dart_tool/
+.packages
+pubspec.lock
+
+# Android
+*.iml
+.gradle/
+local.properties
+android/app/google-services.json
+
+# iOS
+Pods/
+*.xcworkspace
+DerivedData/
+ios/Flutter/Flutter.podspec
+ios/Runner/GeneratedPluginRegistrant.*
+
+# VS Code / IntelliJ
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
