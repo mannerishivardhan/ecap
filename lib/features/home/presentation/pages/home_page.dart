@@ -3,6 +3,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:ecap/features/home/presentation/pages/profile_page.dart';
 import 'package:ecap/features/home/presentation/pages/course_detail_page.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 import 'dart:math' as math;
 import 'package:ecap/features/home/domain/models/course.dart';
 
@@ -142,6 +143,8 @@ class _DashboardPageState extends State<_DashboardPage> {
   CalendarFormat _calendarFormat = CalendarFormat.week;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   final List<UserLocation> _mockLocations = [
     UserLocation(
@@ -454,7 +457,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               const SizedBox(height: 24),
               _buildQuickAccess(),
               const SizedBox(height: 24),
-              _buildRecentFiles(),
+              _buildDateRangeAttendance(),
               const SizedBox(height: 20),
             ],
           ),
@@ -1241,136 +1244,449 @@ class _DashboardPageState extends State<_DashboardPage> {
     );
   }
 
-  Widget _buildRecentFiles() {
-    final recentFiles = [
-      _RecentFile(
-        name: 'DS Assignment',
-        type: 'PDF',
-        size: '2.5 MB',
-        icon: Icons.picture_as_pdf,
-        color: const Color(0xFFFF7675),
-      ),
-      _RecentFile(
-        name: 'DBMS Lecture',
-        type: 'Video',
-        size: '45 MB',
-        icon: Icons.video_library,
-        color: const Color(0xFF74B9FF),
-      ),
-      _RecentFile(
-        name: 'Course Material',
-        type: 'Folder',
-        size: '120 MB',
-        icon: Icons.folder,
-        color: const Color(0xFF55EFC4),
-      ),
-    ];
-
+  Widget _buildDateRangeAttendance() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Recent Files',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF4A4A4A),
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: const Text('See All'),
-            ),
-          ],
+        const Text(
+          'Attendance Analysis',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF4A4A4A),
+          ),
         ),
         const SizedBox(height: 16),
-        ...recentFiles.map((file) => _buildRecentFileItem(file)),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDatePicker(
+                      label: 'Start Date',
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _startDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _startDate = date;
+                            _calculateAttendance();
+                          });
+                        }
+                      },
+                      date: _startDate,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDatePicker(
+                      label: 'End Date',
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _endDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _endDate = date;
+                            _calculateAttendance();
+                          });
+                        }
+                      },
+                      date: _endDate,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildAttendanceStats(),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildRecentFileItem(_RecentFile file) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildDatePicker({
+    required String label,
+    required VoidCallback onTap,
+    DateTime? date,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: file.color.withOpacity(0.1),
+              border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(file.icon, color: file.color),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  file.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+                Icon(
+                  Icons.calendar_today,
+                  size: 20,
+                  color: Colors.grey.shade600,
                 ),
+                const SizedBox(width: 8),
                 Text(
-                  '${file.type} • ${file.size}',
+                  date != null
+                      ? DateFormat('MMM d, y').format(date)
+                      : 'Select date',
                   style: TextStyle(
-                    color: Colors.grey.shade600,
                     fontSize: 14,
+                    color: date != null ? Colors.black87 : Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
-        ],
-      ),
+        ),
+      ],
     );
+  }
+
+  Widget _buildAttendanceStats() {
+    if (_startDate == null || _endDate == null) {
+      return Center(
+        child: Text(
+          'Select date range to view attendance',
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+
+    final totalDays = _endDate!.difference(_startDate!).inDays + 1;
+    final presentDays = _calculatePresentDays();
+    final attendancePercentage = (presentDays / totalDays * 100).toStringAsFixed(1);
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatItem(
+              label: 'Total Days',
+              value: totalDays.toString(),
+              color: const Color(0xFF6C5CE7),
+            ),
+            _buildStatItem(
+              label: 'Present Days',
+              value: presentDays.toString(),
+              color: const Color(0xFF00B894),
+            ),
+            _buildStatItem(
+              label: 'Absent Days',
+              value: (totalDays - presentDays).toString(),
+              color: const Color(0xFFFF7675),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF00B894).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.pie_chart,
+                color: Color(0xFF00B894),
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Attendance: $attendancePercentage%',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF00B894),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatItem({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  int _calculatePresentDays() {
+    if (_startDate == null || _endDate == null) return 0;
+    
+    int presentDays = 0;
+    DateTime currentDate = _startDate!;
+    
+    while (currentDate.isBefore(_endDate!.add(const Duration(days: 1)))) {
+      if (_attendanceData[currentDate] == AttendanceStatus.present) {
+        presentDays++;
+      }
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+    
+    return presentDays;
+  }
+
+  void _calculateAttendance() {
+    // This method will be called when date range changes
+    // You can add additional logic here if needed
+    setState(() {});
   }
 }
 
-class _RecentFile {
-  final String name;
-  final String type;
-  final String size;
-  final IconData icon;
-  final Color color;
-
-  _RecentFile({
-    required this.name,
-    required this.type,
-    required this.size,
-    required this.icon,
-    required this.color,
-  });
-}
-
-class _TimetablePage extends StatelessWidget {
+class _TimetablePage extends StatefulWidget {
   const _TimetablePage({super.key});
 
   @override
+  State<_TimetablePage> createState() => _TimetablePageState();
+}
+
+class _TimetablePageState extends State<_TimetablePage> {
+  final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  final List<String> _periods = [
+    '9:00 - 9:50',
+    '9:50 - 10:40',
+    'Short Break (10:40 - 11:00)',
+    '11:00 - 11:50',
+    '11:50 - 12:40',
+    'Lunch Break (12:40 - 1:30)',
+    '1:30 - 2:20',
+    '2:20 - 3:10',
+    '3:10 - 4:00',
+    '4:00 - 4:50'
+  ];
+
+  // Sample timetable data
+  final Map<String, List<String>> _timetableData = {
+    'Monday': ['Mathematics', 'Physics', 'Break', 'Chemistry', 'English', 'Lunch', 'Computer Science', 'Biology', 'Physical Education', 'Library'],
+    'Tuesday': ['Physics', 'Mathematics', 'Break', 'English', 'Chemistry', 'Lunch', 'Biology', 'Computer Science', 'Art', 'Sports'],
+    'Wednesday': ['Chemistry', 'English', 'Break', 'Mathematics', 'Physics', 'Lunch', 'Computer Science', 'Biology', 'Music', 'Counseling'],
+    'Thursday': ['English', 'Chemistry', 'Break', 'Physics', 'Mathematics', 'Lunch', 'Biology', 'Computer Science', 'Dance', 'Club Activities'],
+    'Friday': ['Computer Science', 'Biology', 'Break', 'Mathematics', 'Physics', 'Lunch', 'Chemistry', 'English', 'Yoga', 'Career Guidance'],
+    'Saturday': ['Biology', 'Computer Science', 'Break', 'Physics', 'Chemistry', 'Lunch', 'Mathematics', 'English', 'Meditation', 'Sports'],
+  };
+
+  Color _getSubjectColor(String subject) {
+    if (subject.contains('Break') || subject.contains('Lunch')) {
+      return Colors.grey.shade100;
+    }
+    switch (subject) {
+      case 'Mathematics':
+        return Colors.blue.shade100;
+      case 'Physics':
+        return Colors.purple.shade100;
+      case 'Chemistry':
+        return Colors.green.shade100;
+      case 'Biology':
+        return Colors.orange.shade100;
+      case 'English':
+        return Colors.red.shade100;
+      case 'Computer Science':
+        return Colors.teal.shade100;
+      default:
+        return Colors.indigo.shade50;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Timetable Page'));
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Class Timetable',
+          style: TextStyle(
+            color: Color(0xFF4A4A4A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row with time periods
+                Row(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 60,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6C5CE7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Time',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ...List.generate(_periods.length, (index) {
+                      final bool isBreak = _periods[index].contains('Break') || _periods[index].contains('Lunch');
+                      return Container(
+                        width: 120,
+                        height: 60,
+                        margin: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isBreak ? Colors.grey.shade200 : const Color(0xFF6C5CE7),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _periods[index],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isBreak ? Colors.black87 : Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Timetable rows
+                ...List.generate(_days.length, (dayIndex) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 80,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6C5CE7).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _days[dayIndex],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF6C5CE7),
+                            ),
+                          ),
+                        ),
+                        ...List.generate(_timetableData[_days[dayIndex]]!.length, (periodIndex) {
+                          final subject = _timetableData[_days[dayIndex]]![periodIndex];
+                          final isBreak = subject.contains('Break') || subject.contains('Lunch');
+                          return Container(
+                            width: 120,
+                            height: 80,
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _getSubjectColor(subject),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isBreak ? Colors.grey.shade300 : Colors.transparent,
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                subject,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: isBreak ? FontWeight.normal : FontWeight.bold,
+                                  color: isBreak ? Colors.grey.shade700 : Colors.black87,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
