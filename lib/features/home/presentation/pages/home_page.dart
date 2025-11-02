@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:ecap/features/home/presentation/pages/profile_page.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'dart:math' as math;
+import 'package:ecap/features/home/domain/models/course.dart';
 
 enum AttendanceStatus {
   present,
@@ -68,10 +70,87 @@ class _DashboardPage extends StatefulWidget {
   State<_DashboardPage> createState() => _DashboardPageState();
 }
 
+class UserLocation {
+  final String id;
+  final String name;
+  final double x;
+  final double y;
+  final Color color;
+
+  UserLocation({
+    required this.id,
+    required this.name,
+    required this.x,
+    required this.y,
+    required this.color,
+  });
+}
+
+class HeatmapPainter extends CustomPainter {
+  final List<UserLocation> locations;
+
+  HeatmapPainter(this.locations);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw grid lines
+    final gridPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..color = Colors.grey.shade200
+      ..strokeWidth = 0.5;
+
+    // Draw vertical grid lines
+    for (var i = 0; i < 10; i++) {
+      final x = size.width * (i / 10);
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, size.height),
+        gridPaint,
+      );
+    }
+
+    // Draw horizontal grid lines
+    for (var i = 0; i < 10; i++) {
+      final y = size.height * (i / 10);
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        gridPaint,
+      );
+    }
+
+    // Draw heat areas
+    for (final location in locations) {
+      final paint = Paint()
+        ..color = location.color.withOpacity(0.1)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        Offset(location.x * size.width, location.y * size.height),
+        30,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
 class _DashboardPageState extends State<_DashboardPage> {
   CalendarFormat _calendarFormat = CalendarFormat.week;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+
+  final List<UserLocation> _mockLocations = [
+    UserLocation(
+      id: '1',
+      name: 'Bhimavaram City Center',
+      x: 0.5,
+      y: 0.5,
+      color: const Color(0xFF76B900), // NVIDIA green color
+    ),
+  ];
   DateTime _attendanceMonth = DateTime.now();
   final PageController _monthController = PageController(
       initialPage: 1000); // Start from middle point for "infinite" scrolling
@@ -107,6 +186,176 @@ class _DashboardPageState extends State<_DashboardPage> {
       'Dec'
     ];
     return months[month - 1];
+  }
+
+  Widget _buildLocationLegend() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Divider(),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: _mockLocations.map((location) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: location.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    location.name,
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildLocationMarkers() {
+    final size = MediaQuery.of(context).size;
+    return _mockLocations.map((location) {
+      return Positioned(
+        left: location.x * (size.width - 40),
+        top: location.y * 380,
+        child: GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: Colors.black.withOpacity(0.9),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: location.color,
+                    width: 2,
+                  ),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: location.color.withOpacity(0.3),
+                            blurRadius: 15,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            location.name.toUpperCase(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: location.color,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "GROOT AI ACTIVE",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                              color: Colors.white70,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: 100,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  location.color.withOpacity(0.3),
+                                  location.color,
+                                  location.color.withOpacity(0.3),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          child: TweenAnimationBuilder(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: const Duration(seconds: 1),
+            builder: (context, double value, child) {
+              return Transform.scale(
+                scale: 0.8 +
+                    (value *
+                        0.2 *
+                        (math
+                            .sin(DateTime.now().millisecondsSinceEpoch / 500))),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.brown.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    Image.network(
+                      'https://raw.githubusercontent.com/mannerishivardhan/ecap/main/assets/groot.png',
+                      width: 40,
+                      height: 40,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: location.color,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              "🌱",
+                              style: TextStyle(fontSize: 20),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }).toList();
   }
 
   DateTime _calculateMonthOffset(DateTime baseDate, int monthOffset) {
@@ -438,30 +687,6 @@ class _DashboardPageState extends State<_DashboardPage> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF8E8E8E),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildQuickAccess() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,7 +813,8 @@ class _DashboardPageState extends State<_DashboardPage> {
                                   Color dotColor;
                                   switch (attendance) {
                                     case AttendanceStatus.present:
-                                      dotColor = const Color(0xFF40C463);
+                                      dotColor = const Color.fromARGB(
+                                          255, 43, 164, 77);
                                       break;
                                     case AttendanceStatus.absent:
                                       dotColor = const Color(0xFFFF7675);
@@ -711,57 +937,294 @@ class _DashboardPageState extends State<_DashboardPage> {
           ],
         ),
         const SizedBox(height: 32),
+        //container for heatmap
         Container(
           height: 460,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.lightGreenAccent,
+            color: Colors.white,
             border: Border.all(
-              width: 3,
-              color: Colors.white,
+              width: 1,
+              color: Colors.grey.shade200,
             ),
             boxShadow: [
               BoxShadow(
-                offset: const Offset(1, 2),
-                color: Colors.grey.shade400,
-                blurRadius: 16,
+                offset: const Offset(0, 2),
+                color: Colors.grey.shade200,
+                blurRadius: 8,
               )
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Live Location Heatmap',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4A4A4A),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_mockLocations.length} Active',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: InteractiveViewer(
+                  boundaryMargin: const EdgeInsets.all(20),
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        'https://raw.githubusercontent.com/mannerishivardhan/ecap/main/assets/bhimavaram_map.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return CustomPaint(
+                            size: const Size(double.infinity, double.infinity),
+                            painter: HeatmapPainter(_mockLocations),
+                          );
+                        },
+                      ),
+                      ..._buildLocationMarkers(),
+                    ],
+                  ),
+                ),
+              ),
+              _buildLocationLegend(),
             ],
           ),
         ),
         const SizedBox(height: 26),
-        SizedBox(
-          height: 260,
-          child: ListView.separated(
-            separatorBuilder: (context, index) {
-              return const SizedBox(width: 10);
-            },
-            shrinkWrap: true,
-            scrollDirection: Axis.horizontal,
-            itemCount: 10,
-            itemBuilder: (context, index) {
-              return Container(
-                key: Key(index.toString()),
-                height: 260,
-                width: 200,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.blue,
-                  border: Border.all(
-                    width: 3,
-                    color: Colors.white,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      offset: const Offset(1, 2),
-                      color: Colors.grey.shade200,
-                      blurRadius: 16,
-                    )
-                  ],
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text(
+                'My Courses',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4A4A4A),
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 260,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                separatorBuilder: (context, index) {
+                  return const SizedBox(width: 16);
+                },
+                shrinkWrap: true,
+                scrollDirection: Axis.horizontal,
+                itemCount: demoCourses.length,
+                itemBuilder: (context, index) {
+                  final course = demoCourses[index];
+                  return Container(
+                    key: Key(index.toString()),
+                    height: 260,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          offset: const Offset(0, 4),
+                          color: course.color.withOpacity(0.1),
+                          blurRadius: 12,
+                          spreadRadius: 4,
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 120,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                            ),
+                            color: course.color.withOpacity(0.1),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: course.color.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: course.color,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  course.code,
+                                  style: TextStyle(
+                                    color: course.color,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                course.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2D3436),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: course.color.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        course.professor[0],
+                                        style: TextStyle(
+                                          color: course.color,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          course.professor,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: Color(0xFF2D3436),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Professor',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Progress',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${(course.progress * 100).toInt()}%',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: course.color,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: LinearProgressIndicator(
+                                      value: course.progress,
+                                      backgroundColor:
+                                          course.color.withOpacity(0.1),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          course.color),
+                                      minHeight: 6,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ],
     );
