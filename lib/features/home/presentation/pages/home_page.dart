@@ -73,8 +73,9 @@ class _DashboardPageState extends State<_DashboardPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   DateTime _attendanceMonth = DateTime.now();
-  final PageController _monthController = PageController(initialPage: 1000); // Start from middle point for "infinite" scrolling
-  
+  final PageController _monthController = PageController(
+      initialPage: 1000); // Start from middle point for "infinite" scrolling
+
   @override
   void dispose() {
     _monthController.dispose();
@@ -111,16 +112,16 @@ class _DashboardPageState extends State<_DashboardPage> {
   DateTime _calculateMonthOffset(DateTime baseDate, int monthOffset) {
     int year = baseDate.year;
     int month = baseDate.month + monthOffset;
-    
+
     // Adjust year based on month overflow/underflow
     year += (month - 1) ~/ 12;
     month = ((month - 1) % 12) + 1;
-    
+
     if (month < 1) {
       month = 12 + month;
       year--;
     }
-    
+
     return DateTime(year, month);
   }
 
@@ -519,26 +520,33 @@ class _DashboardPageState extends State<_DashboardPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: const [
                               Text('M',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12)),
                               Text('T',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12)),
                               Text('W',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12)),
                               Text('T',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12)),
                               Text('F',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12)),
                               Text('S',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12)),
                               Text('S',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12)),
                             ],
                           ),
                         ),
@@ -550,16 +558,19 @@ class _DashboardPageState extends State<_DashboardPage> {
                               final now = DateTime.now();
                               final difference = page - 1000;
                               setState(() {
-                                _attendanceMonth = _calculateMonthOffset(now, difference);
+                                _attendanceMonth =
+                                    _calculateMonthOffset(now, difference);
                               });
                             },
                             itemBuilder: (context, pageIndex) {
                               final now = DateTime.now();
                               final difference = pageIndex - 1000;
-                              final currentMonth = _calculateMonthOffset(now, difference);
-                              
+                              final currentMonth =
+                                  _calculateMonthOffset(now, difference);
+
                               return GridView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
                                 physics: const NeverScrollableScrollPhysics(),
                                 gridDelegate:
                                     const SliverGridDelegateWithFixedCrossAxisCount(
@@ -586,7 +597,8 @@ class _DashboardPageState extends State<_DashboardPage> {
                                       dotColor = const Color(0xFF9BE9A8);
                                       break;
                                     default:
-                                      dotColor = Colors.grey.shade300; // No data
+                                      dotColor =
+                                          Colors.grey.shade300; // No data
                                   }
 
                                   return Container(
@@ -602,10 +614,9 @@ class _DashboardPageState extends State<_DashboardPage> {
                                       child: Text(
                                         '${index + 1}',
                                         style: TextStyle(
-                                          color: dotColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12
-                                        ),
+                                            color: dotColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12),
                                       ),
                                     ),
                                   );
