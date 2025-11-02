@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:ecap/features/home/presentation/pages/profile_page.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -52,8 +56,23 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _DashboardPage extends StatelessWidget {
+class _DashboardPage extends StatefulWidget {
   const _DashboardPage({super.key});
+
+  @override
+  State<_DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<_DashboardPage> {
+  CalendarFormat _calendarFormat = CalendarFormat.week;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _focusedDay;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +121,14 @@ class _DashboardPage extends StatelessWidget {
                 size: 28,
                 color: Color(0xFF4A4A4A),
               ),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfilePage(),
+                  ),
+                );
+              },
             ),
             SizedBox(
               width: 16,
@@ -117,6 +143,8 @@ class _DashboardPage extends StatelessWidget {
               const SizedBox(height: 20),
               _buildStorageCard(),
               const SizedBox(height: 24),
+              _buildCalendar(),
+              const SizedBox(height: 24),
               _buildQuickAccess(),
               const SizedBox(height: 24),
               _buildRecentFiles(),
@@ -129,91 +157,222 @@ class _DashboardPage extends StatelessWidget {
   }
 }
 
-Widget _buildStorageCard() {
+  Widget _buildCalendar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Calendar',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF4A4A4A),
+                  ),
+                ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _calendarFormat = _calendarFormat == CalendarFormat.month
+                              ? CalendarFormat.week
+                              : CalendarFormat.month;
+                        });
+                      },
+                      child: Text(
+                        _calendarFormat == CalendarFormat.month ? 'Week' : 'Month',
+                        style: const TextStyle(color: Color(0xFF6C5CE7)),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.calendar_today, size: 20),
+                      color: const Color(0xFF6C5CE7),
+                      onPressed: () {
+                        setState(() {
+                          _focusedDay = DateTime.now();
+                          _selectedDay = _focusedDay;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          TableCalendar(
+            firstDay: DateTime.utc(2023, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _focusedDay,
+            calendarFormat: _calendarFormat,
+            selectedDayPredicate: (day) {
+              return isSameDay(_selectedDay, day);
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              if (!isSameDay(_selectedDay, selectedDay)) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+              }
+            },
+            onFormatChanged: (format) {
+              if (_calendarFormat != format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+              }
+            },
+            onPageChanged: (focusedDay) {
+              _focusedDay = focusedDay;
+            },
+            calendarStyle: CalendarStyle(
+              selectedDecoration: const BoxDecoration(
+                color: Color(0xFF6C5CE7),
+                shape: BoxShape.circle,
+              ),
+              todayDecoration: BoxDecoration(
+                color: const Color(0xFF6C5CE7).withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              markersMaxCount: 3,
+              outsideDaysVisible: false,
+            ),
+            headerStyle: const HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+              leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF6C5CE7)),
+              rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF6C5CE7)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStorageCard() {
+  final List<Map<String, String>> carouselItems = [
+    {
+      'image':
+          'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop',
+      'title': 'Campus Life',
+      'subtitle': 'Experience the vibrant college atmosphere',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=2086&auto=format&fit=crop',
+      'title': 'Academic Excellence',
+      'subtitle': 'Pursue your academic goals',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?q=80&w=2069&auto=format&fit=crop',
+      'title': 'Innovation Hub',
+      'subtitle': 'Discover new possibilities',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=2070&auto=format&fit=crop',
+      'title': 'Research Center',
+      'subtitle': 'Explore cutting-edge research',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070&auto=format&fit=crop',
+      'title': 'Tech Labs',
+      'subtitle': 'State-of-the-art facilities',
+    },
+  ];
+
   return Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(20),
+    height: 200,
     decoration: BoxDecoration(
-      color: const Color(0xFF6C5CE7),
       borderRadius: BorderRadius.circular(20),
+      color: const Color(0xFF6C5CE7),
     ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Academic Storage',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Icon(Icons.more_vert, color: Colors.white),
-          ],
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: CarouselSlider(
+        options: CarouselOptions(
+          height: 200,
+          aspectRatio: 16 / 9,
+          viewportFraction: 1.0,
+          initialPage: 0,
+          enableInfiniteScroll: true,
+          reverse: false,
+          autoPlay: true,
+          autoPlayInterval: const Duration(seconds: 5),
+          autoPlayAnimationDuration: const Duration(milliseconds: 1500),
+          autoPlayCurve: Curves.easeInOutCubic,
+          enlargeCenterPage: true,
+          enlargeFactor: 0.3,
+          scrollDirection: Axis.horizontal,
+          pauseAutoPlayOnTouch: true,
+          scrollPhysics: const BouncingScrollPhysics(),
         ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.cloud, color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 15),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Total Storage',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+        items: carouselItems
+            .map((item) => Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(item['image']!),
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  SizedBox(height: 5),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '128 GB',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.7),
+                        ],
                       ),
-                      Text(
-                        '65% used',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item['title']!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
+                        Text(
+                          item['subtitle']!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: 0.65,
-            backgroundColor: Colors.white.withOpacity(0.2),
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-            minHeight: 10,
-          ),
-        ),
-      ],
+                ))
+            .toList(),
+      ),
     ),
   );
 }
