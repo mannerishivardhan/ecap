@@ -73,6 +73,13 @@ class _DashboardPageState extends State<_DashboardPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   DateTime _attendanceMonth = DateTime.now();
+  final PageController _monthController = PageController(initialPage: 1000); // Start from middle point for "infinite" scrolling
+  
+  @override
+  void dispose() {
+    _monthController.dispose();
+    super.dispose();
+  }
 
   // Mock attendance data - replace with real data from backend
   final Map<DateTime, AttendanceStatus> _attendanceData = {
@@ -99,6 +106,22 @@ class _DashboardPageState extends State<_DashboardPage> {
       'Dec'
     ];
     return months[month - 1];
+  }
+
+  DateTime _calculateMonthOffset(DateTime baseDate, int monthOffset) {
+    int year = baseDate.year;
+    int month = baseDate.month + monthOffset;
+    
+    // Adjust year based on month overflow/underflow
+    year += (month - 1) ~/ 12;
+    month = ((month - 1) % 12) + 1;
+    
+    if (month < 1) {
+      month = 12 + month;
+      year--;
+    }
+    
+    return DateTime(year, month);
   }
 
   int _getDaysInMonth(DateTime date) {
@@ -480,41 +503,12 @@ class _DashboardPageState extends State<_DashboardPage> {
                                 color: Color(0xFF4A4A4A),
                               ),
                             ),
-                            Row(
-                              spacing: 2,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _attendanceMonth = DateTime(
-                                        _attendanceMonth.year,
-                                        _attendanceMonth.month - 1,
-                                      );
-                                    });
-                                  },
-                                  child: const Icon(Icons.chevron_left,
-                                      size: 20),
-                                ),
-                                Text(
-                                  _getMonthName(_attendanceMonth.month),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _attendanceMonth = DateTime(
-                                        _attendanceMonth.year,
-                                        _attendanceMonth.month + 1,
-                                      );
-                                    });
-                                  },
-                                  child: const Icon(Icons.chevron_right,
-                                      size: 20),
-                                ),
-                              ],
+                            Text(
+                              '${_getMonthName(_attendanceMonth.month)} ${_attendanceMonth.year}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -550,56 +544,72 @@ class _DashboardPageState extends State<_DashboardPage> {
                         ),
                         const SizedBox(height: 8),
                         Expanded(
-                          child: GridView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 7,
-                              crossAxisSpacing: 7,
-                              mainAxisSpacing: 4,
-                              childAspectRatio: 1,
-                            ),
-                            itemCount: _getDaysInMonth(_attendanceMonth),
-                            itemBuilder: (context, index) {
-                              final date = DateTime(_attendanceMonth.year,
-                                  _attendanceMonth.month, index + 1);
-                              final attendance = _attendanceData[date];
-
-                              Color dotColor;
-                              switch (attendance) {
-                                case AttendanceStatus.present:
-                                  dotColor = const Color(0xFF40C463);
-                                  break;
-                                case AttendanceStatus.absent:
-                                  dotColor = const Color(0xFFFF7675);
-                                  break;
-                                case AttendanceStatus.partial:
-                                  dotColor = const Color(0xFF9BE9A8);
-                                  break;
-                                default:
-                                  dotColor = Colors.grey.shade300; // No data
-                              }
-
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: dotColor.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: dotColor,
-                                    width: 1,
-                                  ),
+                          child: PageView.builder(
+                            controller: _monthController,
+                            onPageChanged: (page) {
+                              final now = DateTime.now();
+                              final difference = page - 1000;
+                              setState(() {
+                                _attendanceMonth = _calculateMonthOffset(now, difference);
+                              });
+                            },
+                            itemBuilder: (context, pageIndex) {
+                              final now = DateTime.now();
+                              final difference = pageIndex - 1000;
+                              final currentMonth = _calculateMonthOffset(now, difference);
+                              
+                              return GridView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                physics: const NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 7,
+                                  crossAxisSpacing: 7,
+                                  mainAxisSpacing: 4,
+                                  childAspectRatio: 1,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: TextStyle(
-                                      color: dotColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12
+                                itemCount: _getDaysInMonth(currentMonth),
+                                itemBuilder: (context, index) {
+                                  final date = DateTime(currentMonth.year,
+                                      currentMonth.month, index + 1);
+                                  final attendance = _attendanceData[date];
+
+                                  Color dotColor;
+                                  switch (attendance) {
+                                    case AttendanceStatus.present:
+                                      dotColor = const Color(0xFF40C463);
+                                      break;
+                                    case AttendanceStatus.absent:
+                                      dotColor = const Color(0xFFFF7675);
+                                      break;
+                                    case AttendanceStatus.partial:
+                                      dotColor = const Color(0xFF9BE9A8);
+                                      break;
+                                    default:
+                                      dotColor = Colors.grey.shade300; // No data
+                                  }
+
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: dotColor.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: dotColor,
+                                        width: 1,
+                                      ),
                                     ),
-                                  ),
-                                ),
+                                    child: Center(
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          color: dotColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),
