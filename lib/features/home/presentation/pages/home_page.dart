@@ -1702,8 +1702,212 @@ class _AssignmentsPage extends StatelessWidget {
 class _MorePage extends StatelessWidget {
   const _MorePage({super.key});
 
+  Widget _buildOptionCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    String? subtitle,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('More Page'));
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'More Options',
+          style: TextStyle(
+            color: Color(0xFF4A4A4A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Student Services',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6C5CE7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildOptionCard(
+              title: 'Fee Payment',
+              subtitle: 'Pay your semester fees securely',
+              icon: Icons.payment,
+              color: Colors.green,
+              onTap: () {
+                // TODO: Implement fee payment
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              title: 'Fee Details',
+              subtitle: 'View fee structure and payment history',
+              icon: Icons.receipt_long,
+              color: Colors.blue,
+              onTap: () {
+                // TODO: Implement fee details
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              title: 'Dues & Payments',
+              subtitle: 'Check pending payments and dues',
+              icon: Icons.account_balance_wallet,
+              color: Colors.orange,
+              onTap: () {
+                // TODO: Implement dues page
+              },
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Support & Resources',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6C5CE7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildOptionCard(
+              title: 'Leave Application',
+              subtitle: 'Apply for leave and track status',
+              icon: Icons.event_busy,
+              color: Colors.red,
+              onTap: () {
+                // TODO: Implement leave application
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              title: 'Complaints & Suggestions',
+              subtitle: 'Submit your feedback or concerns',
+              icon: Icons.feedback,
+              color: Colors.purple,
+              onTap: () {
+                // TODO: Implement complaints page
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              title: 'Contact Us',
+              subtitle: 'Get in touch with faculty and staff',
+              icon: Icons.contact_support,
+              color: Colors.teal,
+              onTap: () {
+                // TODO: Implement contact page
+              },
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Additional Services',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6C5CE7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildOptionCard(
+              title: 'Library Services',
+              subtitle: 'Access digital library and book status',
+              icon: Icons.library_books,
+              color: Colors.brown,
+              onTap: () {
+                // TODO: Implement library services
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              title: 'Campus Events',
+              subtitle: 'Stay updated with college events',
+              icon: Icons.event,
+              color: Colors.indigo,
+              onTap: () {
+                // TODO: Implement events page
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              title: 'Academic Calendar',
+              subtitle: 'View important dates and schedules',
+              icon: Icons.calendar_today,
+              color: Colors.deepOrange,
+              onTap: () {
+                // TODO: Implement calendar page
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              title: 'Student ID Card',
+              subtitle: 'View and download your digital ID',
+              icon: Icons.badge,
+              color: Colors.cyan,
+              onTap: () {
+                // TODO: Implement ID card page
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
