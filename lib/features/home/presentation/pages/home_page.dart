@@ -3,6 +3,12 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:ecap/features/home/presentation/pages/profile_page.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+enum AttendanceStatus {
+  present,
+  absent,
+  partial,
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -66,6 +72,38 @@ class _DashboardPageState extends State<_DashboardPage> {
   CalendarFormat _calendarFormat = CalendarFormat.week;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  DateTime _attendanceMonth = DateTime.now();
+
+  // Mock attendance data - replace with real data from backend
+  final Map<DateTime, AttendanceStatus> _attendanceData = {
+    DateTime(2025, 11, 1): AttendanceStatus.present,
+    DateTime(2025, 11, 2): AttendanceStatus.present,
+    DateTime(2025, 11, 3): AttendanceStatus.absent,
+    DateTime(2025, 11, 4): AttendanceStatus.present,
+    DateTime(2025, 11, 5): AttendanceStatus.partial,
+  };
+
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return months[month - 1];
+  }
+
+  int _getDaysInMonth(DateTime date) {
+    return DateTime(date.year, date.month + 1, 0).day;
+  }
 
   @override
   void initState() {
@@ -376,6 +414,30 @@ class _DashboardPageState extends State<_DashboardPage> {
     );
   }
 
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF8E8E8E),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuickAccess() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,7 +452,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                     height: 240,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      color: Colors.blue,
+                      color: const Color.fromARGB(255, 255, 255, 255),
                       border: Border.all(
                         width: 3,
                         color: Colors.white,
@@ -401,6 +463,160 @@ class _DashboardPageState extends State<_DashboardPage> {
                           color: Colors.grey.shade400,
                           blurRadius: 16,
                         )
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Attendance',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF4A4A4A),
+                              ),
+                            ),
+                            Row(
+                              spacing: 2,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _attendanceMonth = DateTime(
+                                        _attendanceMonth.year,
+                                        _attendanceMonth.month - 1,
+                                      );
+                                    });
+                                  },
+                                  child: const Icon(Icons.chevron_left,
+                                      size: 20),
+                                ),
+                                Text(
+                                  _getMonthName(_attendanceMonth.month),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _attendanceMonth = DateTime(
+                                        _attendanceMonth.year,
+                                        _attendanceMonth.month + 1,
+                                      );
+                                    });
+                                  },
+                                  child: const Icon(Icons.chevron_right,
+                                      size: 20),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Text('M',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                              Text('T',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                              Text('W',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                              Text('T',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                              Text('F',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                              Text('S',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                              Text('S',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: GridView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 7,
+                              crossAxisSpacing: 7,
+                              mainAxisSpacing: 4,
+                              childAspectRatio: 1,
+                            ),
+                            itemCount: _getDaysInMonth(_attendanceMonth),
+                            itemBuilder: (context, index) {
+                              final date = DateTime(_attendanceMonth.year,
+                                  _attendanceMonth.month, index + 1);
+                              final attendance = _attendanceData[date];
+
+                              Color dotColor;
+                              switch (attendance) {
+                                case AttendanceStatus.present:
+                                  dotColor = const Color(0xFF40C463);
+                                  break;
+                                case AttendanceStatus.absent:
+                                  dotColor = const Color(0xFFFF7675);
+                                  break;
+                                case AttendanceStatus.partial:
+                                  dotColor = const Color(0xFF9BE9A8);
+                                  break;
+                                default:
+                                  dotColor = Colors.grey.shade300; // No data
+                              }
+
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: dotColor.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: dotColor,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                      color: dotColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        // const SizedBox(height: 16),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.center,
+                        //   children: [
+                        //     _buildLegendItem(
+                        //         'Present', const Color(0xFF40C463)),
+                        //     const SizedBox(width: 16),
+                        //     _buildLegendItem(
+                        //         'Partial', const Color(0xFF9BE9A8)),
+                        //     const SizedBox(width: 16),
+                        //     _buildLegendItem('Absent', const Color(0xFFFF7675)),
+                        //   ],
+                        // ),
                       ],
                     ),
                   ),
