@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/fee_details.dart';
 
 class FeePaymentScreen extends StatefulWidget {
   const FeePaymentScreen({Key? key}) : super(key: key);

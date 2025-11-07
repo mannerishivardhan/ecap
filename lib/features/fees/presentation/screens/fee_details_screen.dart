@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/fee_details.dart';
 
 class FeeDetailsScreen extends StatelessWidget {
   const FeeDetailsScreen({Key? key}) : super(key: key);

@@ -10,6 +10,14 @@ import 'package:ecap/features/fees/presentation/screens/fee_payment_screen.dart'
 import 'package:ecap/features/fees/presentation/screens/fee_details_screen.dart';
 import 'package:ecap/features/fees/presentation/screens/dues_and_payments_screen.dart';
 
+import '../../../support/presentation/screens/complaints_suggestions_screen.dart';
+import '../../../support/presentation/screens/contact_us_screen.dart';
+import '../../../support/presentation/screens/leave_application_screen.dart';
+import '../../../support/presentation/screens/library_services_screen.dart';
+import '../../../support/presentation/screens/campus_events_screen.dart';
+import '../../../support/presentation/screens/academic_calendar_screen.dart';
+import '../../../support/presentation/screens/student_id_card_screen.dart';
+
 enum AttendanceStatus {
   present,
   absent,
@@ -1940,7 +1948,14 @@ class _MorePage extends StatelessWidget {
               icon: Icons.event_busy,
               color: Colors.red,
               onTap: () {
-                // TODO: Implement leave application
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const LeaveApplicationScreen();
+                    },
+                  ),
+                );
               },
             ),
             const SizedBox(height: 12),
@@ -1950,7 +1965,14 @@ class _MorePage extends StatelessWidget {
               icon: Icons.feedback,
               color: Colors.purple,
               onTap: () {
-                // TODO: Implement complaints page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const ComplaintsAndSuggestionsScreen();
+                    },
+                  ),
+                );
               },
             ),
             const SizedBox(height: 12),
@@ -1960,7 +1982,14 @@ class _MorePage extends StatelessWidget {
               icon: Icons.contact_support,
               color: Colors.teal,
               onTap: () {
-                // TODO: Implement contact page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const ContactUsScreen();
+                    },
+                  ),
+                );
               },
             ),
             const SizedBox(height: 24),
@@ -1975,11 +2004,16 @@ class _MorePage extends StatelessWidget {
             const SizedBox(height: 16),
             _buildOptionCard(
               title: 'Library Services',
-              subtitle: 'Access digital library and book status',
+              subtitle: 'Book issue, study rooms & resources',
               icon: Icons.library_books,
-              color: Colors.brown,
+              color: Colors.indigo,
               onTap: () {
-                // TODO: Implement library services
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LibraryServicesScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 12),
@@ -1987,29 +2021,44 @@ class _MorePage extends StatelessWidget {
               title: 'Campus Events',
               subtitle: 'Stay updated with college events',
               icon: Icons.event,
-              color: Colors.indigo,
+              color: Colors.teal,
               onTap: () {
-                // TODO: Implement events page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CampusEventsScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 12),
             _buildOptionCard(
               title: 'Academic Calendar',
-              subtitle: 'View important dates and schedules',
-              icon: Icons.calendar_today,
-              color: Colors.deepOrange,
+              subtitle: 'Important dates and schedules',
+              icon: Icons.calendar_month,
+              color: Colors.deepPurple,
               onTap: () {
-                // TODO: Implement calendar page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AcademicCalendarScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 12),
             _buildOptionCard(
               title: 'Student ID Card',
-              subtitle: 'View and download your digital ID',
+              subtitle: 'Virtual identification card',
               icon: Icons.badge,
-              color: Colors.cyan,
+              color: Colors.brown,
               onTap: () {
-                // TODO: Implement ID card page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StudentIdCard(),
+                  ),
+                );
               },
             ),
           ],
