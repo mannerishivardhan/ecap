@@ -6,6 +6,9 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
 import 'package:ecap/features/home/domain/models/course.dart';
+import 'package:ecap/features/fees/presentation/screens/fee_payment_screen.dart';
+import 'package:ecap/features/fees/presentation/screens/fee_details_screen.dart';
+import 'package:ecap/features/fees/presentation/screens/dues_and_payments_screen.dart';
 
 enum AttendanceStatus {
   present,
@@ -1066,7 +1069,8 @@ class _DashboardPageState extends State<_DashboardPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CourseDetailPage(course: course),
+                          builder: (context) =>
+                              CourseDetailPage(course: course),
                         ),
                       );
                     },
@@ -1221,8 +1225,9 @@ class _DashboardPageState extends State<_DashboardPage> {
                                         value: course.progress,
                                         backgroundColor:
                                             course.color.withOpacity(0.1),
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                            course.color),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                course.color),
                                         minHeight: 6,
                                       ),
                                     ),
@@ -1391,7 +1396,8 @@ class _DashboardPageState extends State<_DashboardPage> {
 
     final totalDays = _endDate!.difference(_startDate!).inDays + 1;
     final presentDays = _calculatePresentDays();
-    final attendancePercentage = (presentDays / totalDays * 100).toStringAsFixed(1);
+    final attendancePercentage =
+        (presentDays / totalDays * 100).toStringAsFixed(1);
 
     return Column(
       children: [
@@ -1482,17 +1488,17 @@ class _DashboardPageState extends State<_DashboardPage> {
 
   int _calculatePresentDays() {
     if (_startDate == null || _endDate == null) return 0;
-    
+
     int presentDays = 0;
     DateTime currentDate = _startDate!;
-    
+
     while (currentDate.isBefore(_endDate!.add(const Duration(days: 1)))) {
       if (_attendanceData[currentDate] == AttendanceStatus.present) {
         presentDays++;
       }
       currentDate = currentDate.add(const Duration(days: 1));
     }
-    
+
     return presentDays;
   }
 
@@ -1511,7 +1517,14 @@ class _TimetablePage extends StatefulWidget {
 }
 
 class _TimetablePageState extends State<_TimetablePage> {
-  final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  final List<String> _days = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday'
+  ];
   final List<String> _periods = [
     '9:00 - 9:50',
     '9:50 - 10:40',
@@ -1527,12 +1540,78 @@ class _TimetablePageState extends State<_TimetablePage> {
 
   // Sample timetable data
   final Map<String, List<String>> _timetableData = {
-    'Monday': ['Mathematics', 'Physics', 'Break', 'Chemistry', 'English', 'Lunch', 'Computer Science', 'Biology', 'Physical Education', 'Library'],
-    'Tuesday': ['Physics', 'Mathematics', 'Break', 'English', 'Chemistry', 'Lunch', 'Biology', 'Computer Science', 'Art', 'Sports'],
-    'Wednesday': ['Chemistry', 'English', 'Break', 'Mathematics', 'Physics', 'Lunch', 'Computer Science', 'Biology', 'Music', 'Counseling'],
-    'Thursday': ['English', 'Chemistry', 'Break', 'Physics', 'Mathematics', 'Lunch', 'Biology', 'Computer Science', 'Dance', 'Club Activities'],
-    'Friday': ['Computer Science', 'Biology', 'Break', 'Mathematics', 'Physics', 'Lunch', 'Chemistry', 'English', 'Yoga', 'Career Guidance'],
-    'Saturday': ['Biology', 'Computer Science', 'Break', 'Physics', 'Chemistry', 'Lunch', 'Mathematics', 'English', 'Meditation', 'Sports'],
+    'Monday': [
+      'Mathematics',
+      'Physics',
+      'Break',
+      'Chemistry',
+      'English',
+      'Lunch',
+      'Computer Science',
+      'Biology',
+      'Physical Education',
+      'Library'
+    ],
+    'Tuesday': [
+      'Physics',
+      'Mathematics',
+      'Break',
+      'English',
+      'Chemistry',
+      'Lunch',
+      'Biology',
+      'Computer Science',
+      'Art',
+      'Sports'
+    ],
+    'Wednesday': [
+      'Chemistry',
+      'English',
+      'Break',
+      'Mathematics',
+      'Physics',
+      'Lunch',
+      'Computer Science',
+      'Biology',
+      'Music',
+      'Counseling'
+    ],
+    'Thursday': [
+      'English',
+      'Chemistry',
+      'Break',
+      'Physics',
+      'Mathematics',
+      'Lunch',
+      'Biology',
+      'Computer Science',
+      'Dance',
+      'Club Activities'
+    ],
+    'Friday': [
+      'Computer Science',
+      'Biology',
+      'Break',
+      'Mathematics',
+      'Physics',
+      'Lunch',
+      'Chemistry',
+      'English',
+      'Yoga',
+      'Career Guidance'
+    ],
+    'Saturday': [
+      'Biology',
+      'Computer Science',
+      'Break',
+      'Physics',
+      'Chemistry',
+      'Lunch',
+      'Mathematics',
+      'English',
+      'Meditation',
+      'Sports'
+    ],
   };
 
   Color _getSubjectColor(String subject) {
@@ -1600,14 +1679,17 @@ class _TimetablePageState extends State<_TimetablePage> {
                       ),
                     ),
                     ...List.generate(_periods.length, (index) {
-                      final bool isBreak = _periods[index].contains('Break') || _periods[index].contains('Lunch');
+                      final bool isBreak = _periods[index].contains('Break') ||
+                          _periods[index].contains('Lunch');
                       return Container(
                         width: 120,
                         height: 60,
                         margin: const EdgeInsets.only(left: 8),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isBreak ? Colors.grey.shade200 : const Color(0xFF6C5CE7),
+                          color: isBreak
+                              ? Colors.grey.shade200
+                              : const Color(0xFF6C5CE7),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
@@ -1648,9 +1730,13 @@ class _TimetablePageState extends State<_TimetablePage> {
                             ),
                           ),
                         ),
-                        ...List.generate(_timetableData[_days[dayIndex]]!.length, (periodIndex) {
-                          final subject = _timetableData[_days[dayIndex]]![periodIndex];
-                          final isBreak = subject.contains('Break') || subject.contains('Lunch');
+                        ...List.generate(
+                            _timetableData[_days[dayIndex]]!.length,
+                            (periodIndex) {
+                          final subject =
+                              _timetableData[_days[dayIndex]]![periodIndex];
+                          final isBreak = subject.contains('Break') ||
+                              subject.contains('Lunch');
                           return Container(
                             width: 120,
                             height: 80,
@@ -1660,7 +1746,9 @@ class _TimetablePageState extends State<_TimetablePage> {
                               color: _getSubjectColor(subject),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: isBreak ? Colors.grey.shade300 : Colors.transparent,
+                                color: isBreak
+                                    ? Colors.grey.shade300
+                                    : Colors.transparent,
                                 width: 1,
                               ),
                             ),
@@ -1670,8 +1758,12 @@ class _TimetablePageState extends State<_TimetablePage> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  fontWeight: isBreak ? FontWeight.normal : FontWeight.bold,
-                                  color: isBreak ? Colors.grey.shade700 : Colors.black87,
+                                  fontWeight: isBreak
+                                      ? FontWeight.normal
+                                      : FontWeight.bold,
+                                  color: isBreak
+                                      ? Colors.grey.shade700
+                                      : Colors.black87,
                                 ),
                               ),
                             ),
@@ -1794,7 +1886,12 @@ class _MorePage extends StatelessWidget {
               icon: Icons.payment,
               color: Colors.green,
               onTap: () {
-                // TODO: Implement fee payment
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FeePaymentScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 12),
@@ -1804,7 +1901,12 @@ class _MorePage extends StatelessWidget {
               icon: Icons.receipt_long,
               color: Colors.blue,
               onTap: () {
-                // TODO: Implement fee details
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FeeDetailsScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 12),
@@ -1814,7 +1916,12 @@ class _MorePage extends StatelessWidget {
               icon: Icons.account_balance_wallet,
               color: Colors.orange,
               onTap: () {
-                // TODO: Implement dues page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DuesAndPaymentsScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 24),
